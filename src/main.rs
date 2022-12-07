@@ -11,7 +11,7 @@ use crate::tenor::Tenor;
 mod tenor;
 
 #[group]
-#[commands(reddit,gif,badtaste,unixporn,reddit)]
+#[commands(reddit,gif,badtaste,unixporn,reddit,dadjoke)]
 struct General;
 
 struct Handler;
@@ -128,6 +128,23 @@ async fn reddit_fetcher(ctx: &Context, msg: &Message, subredit: &str) -> Command
             println!("Error sending message: {:?}", m.err());
         }
     }
+    Ok(())
+}
+
+#[command]
+async fn dadjoke(ctx: &Context, msg: &Message) -> CommandResult {
+    //request with Accept header
+    let res = reqwest::Client::new()
+        .get("https://icanhazdadjoke.com/")
+        .header("Accept", "application/json")
+        .send()
+        .await?;
+    //let res = reqwest::get("https://icanhazdadjoke.com/").await?;
+    let body = res.text().await?;
+    println!("body: {}", body);
+    let v: Value = serde_json::from_str(&body).unwrap();
+    let joke = v["joke"].as_str().unwrap();
+    msg.reply(ctx, joke).await?;
     Ok(())
 }
 
